@@ -12,10 +12,13 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private async void Start()
     {
+        // Create and configure the NetworkRunner
         runner = gameObject.AddComponent<NetworkRunner>();
         runner.AddCallbacks(this);
 
         var sceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>();
+
+        Debug.Log("Starting Fusion session...");
 
         var result = await runner.StartGame(new StartGameArgs()
         {
@@ -25,9 +28,31 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         });
 
         if (result.Ok)
+        {
             Debug.Log("Joined Shared Game Session!");
+
+            // Only the host (master client) should spawn the GameManager
+            if (runner.IsSharedModeMasterClient)
+            {
+                Debug.Log("Spawning GameManager prefab...");
+
+                // Load and spawn GameManager from Resources
+                var prefab = Resources.Load<GameObject>("GameManager");
+                if (prefab == null)
+                {
+                    Debug.LogError("Could not find GameManager prefab in Resources!");
+                }
+                else
+                {
+                    runner.Spawn(prefab, Vector3.zero, Quaternion.identity);
+                    Debug.Log("GameManager spawned successfully");
+                }
+            }
+        }
         else
+        {
             Debug.LogError($"Failed to start Fusion: {result.ShutdownReason}");
+        }
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
@@ -40,20 +65,18 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             // Sort cameras by name to get a predictable order
             cams = cams.OrderBy(c => c.name).ToArray();
 
-            // Find the index of this player based on their PlayerId order
+            // Determine this player's index
             var allPlayers = runner.ActivePlayers.OrderBy(p => p.RawEncoded).ToList();
             int playerIndex = allPlayers.IndexOf(player);
-
-            // If index invalid, fallback to 0
             if (playerIndex < 0) playerIndex = 0;
 
             Debug.Log($"Local Player {player.PlayerId} detected with index {playerIndex}");
 
-            // Disable all cameras locally (does not affect other clients)
+            // Disable all cameras locally
             foreach (var cam in cams)
                 cam.enabled = false;
 
-            // Enable only the camera for this local player
+            // Enable only the assigned camera
             if (playerIndex < cams.Length)
             {
                 cams[playerIndex].enabled = true;
@@ -66,13 +89,13 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // --- Empty Callbacks (required by Fusion) ---
+    // --- Required empty Fusion callbacks ---
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { } 
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
@@ -83,6 +106,6 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
     public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
-    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { } 
-    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }  
+    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 }
