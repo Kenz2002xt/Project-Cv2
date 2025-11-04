@@ -60,7 +60,30 @@ public class GameManager : NetworkBehaviour
         {
             new QuestionData { question = "Would you sacrifice one person to save five?", answers = new string[] { "Yes", "No", "Depends" } },
             new QuestionData { question = "Would you tell a painful truth or a comforting lie?", answers = new string[] { "Truth", "Lie", "Neither" } },
-            new QuestionData { question = "You see someone stealing food to survive. What do you do?", answers = new string[] { "Report them", "Help them", "Ignore it" } }
+            new QuestionData { question = "You see someone stealing food to survive. What do you do?", answers = new string[] { "Report them", "Help them", "Ignore it" } },
+            new QuestionData { question = "Is revenge ever justified?", answers = new string[] { "Yes", "No", "Rarely" } },
+            new QuestionData { question = "Is killing in self-defense moral?", answers = new string[] { "Yes", "No", "Last Resort" } },
+            new QuestionData { question = "Should people be judged for their past mistakes", answers = new string[] { "Always", "Rarely", "Mostly" } },
+            new QuestionData { question = "What matters most: truth, loyalty, kindness", answers = new string[] { "Truth", "Loyalty", "Kindness" } },
+            new QuestionData { question = "What defines a good person?", answers = new string[] { "Intentions", "Actions", "Impact" } },
+            new QuestionData { question = "What is worse: greed, cruelty, cowardice", answers = new string[] { "Greed", "Cruelty", "Cowardice" } },
+            new QuestionData { question = "Is it better to be feared or respected?", answers = new string[] { "Feared", "Respected", "Neither" } },
+            new QuestionData { question = "You can erase someone's painful memories. Do you?", answers = new string[] { "Yesr", "No", "Depends" } },
+            new QuestionData { question = "You can save yourself or a child from drowning. Who lives?", answers = new string[] { "Myself", "The Child", "Neither" } },
+            new QuestionData { question = "Would you tell a painful truth or a comforting lie?", answers = new string[] { "Truth", "Lie", "Neither" } },
+            new QuestionData { question = "Your commander hides a radiation leak to avoid panic", answers = new string[] { "Expose it", "Stay Silent", "Confront" } },
+            new QuestionData { question = "An unknown signal could be a distress call or a trap", answers = new string[] { "Investigate", "Ignore", "Scan" } },
+            new QuestionData { question = "You can send data home or save power for life support", answers = new string[] { "Send", "Save", "Ask Crew" } },
+            new QuestionData { question = "Purge 10% of the population to preserve oxygen?", answers = new string[] { "Approve", "Deny", "5%" } },
+            new QuestionData { question = "You can donate a kidney to save a stranger, but you may die", answers = new string[] { "Donate", "Refuse", "Wait" } },
+            new QuestionData { question = "You can save a drowning stranger or a group of pets", answers = new string[] { "Stranger", "Pets", "Try Both" } },
+            new QuestionData { question = "You can manipulate someone to achieve a good outcome", answers = new string[] { "Do it", "Don't", "Depends" } },
+            new QuestionData { question = "How do you respond to betrayal?", answers = new string[] { "Forgive", "Revenge", "Ignore" } },
+            new QuestionData { question = "What is your approach to failure in others?", answers = new string[] { "Guide", "Abandon", "Observe" } },
+            new QuestionData { question = "Which emotion drives your response to jealousy?", answers = new string[] { "Anger", "Envy", "Motivation" } },
+            new QuestionData { question = "What is your response to personal failure?", answers = new string[] { "Reflect", "Blame", "Ignore" } },
+            new QuestionData { question = "What is your response to fear?", answers = new string[] { "Fight", "Flight", "Freeze" } },
+            new QuestionData { question = "What is your response to authority you disagree with?", answers = new string[] { "Challenge", "Obey", "Subvert" } }
         };
     }
 
