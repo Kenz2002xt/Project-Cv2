@@ -1,6 +1,13 @@
 using Fusion;
 using UnityEngine;
 
+
+
+//original version of PlayerController that used number key inputs (1, 2, 3) for testing
+//was replaced by UI button callbacks in game manager
+//keeping this script for documentation and reference only
+
+
 public class PlayerController : NetworkBehaviour
 {
     public struct PlayerInputData : INetworkInput

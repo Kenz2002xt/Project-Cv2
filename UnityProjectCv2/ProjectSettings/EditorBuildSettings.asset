@@ -12,6 +12,12 @@ EditorBuildSettings:
     path: Assets/MainMenuScene.unity
     guid: cbb3db33e9411bd4d8983f695ee1649b
   - enabled: 1
+    path: Assets/ControlsScene.unity
+    guid: 0e9554055a332ce42a1665f26610027e
+  - enabled: 1
+    path: Assets/CreditsScene.unity
+    guid: e74b63e21daba5744ad1365de1e3879d
+  - enabled: 1
     path: Assets/LobbyScene.unity
     guid: a2f4fb763854976418d1ac6551ed5dfe
   - enabled: 1

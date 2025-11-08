@@ -6,25 +6,40 @@ using System.Collections.Generic;
 using Fusion.Sockets;
 using System.Linq;
 
+//This script sets up and manages the Fusion multiplayer session for the game
+//It handles starting a shared game session, spawning the GameManager prefab for the host,
+//and assigning cameras to each local player, disables all others.
+//Includes all mandatory Fusion INetworkRunnerCallbacks to prevent errors.
+
+//Sources used for code:
+//Photon Fusion Documentation- "Fusion 2 Introduction"
+//"Fusion 2- Creating and Returning to Lobbies" - Philip Herlitz on Youtube
+//"Game Dev Steals from Unity, for Multiplayer Spawning, with Photon Fusion" - Philip Herlitz on Youtube
+//Game Dev Does Online Multiplayer the Easy Way- Photon Fusion tutorial" - Philip Herlitz on Youtube
+
+
 public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
+    //the Fusion NetworkRunner instance managing the session
     private NetworkRunner runner;
 
     private async void Start()
     {
         // Create and configure the NetworkRunner
         runner = gameObject.AddComponent<NetworkRunner>();
-        runner.AddCallbacks(this);
+        runner.AddCallbacks(this); //registering the script as a callback listener
 
         var sceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         Debug.Log("Starting Fusion session...");
 
+
+        //Starts the game asynchronously wit specified settings
         var result = await runner.StartGame(new StartGameArgs()
         {
-            GameMode = GameMode.Shared,
-            SessionName = "MainRoom",
-            SceneManager = sceneManager
+            GameMode = GameMode.Shared, //shared allows all players to connect to the same session
+            SessionName = "MainRoom", //session name
+            SceneManager = sceneManager //handles the automatic scene managment
         });
 
         if (result.Ok)
@@ -44,6 +59,7 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
                 }
                 else
                 {
+                    //spawns the GameManager at the origin point with no rotation
                     runner.Spawn(prefab, Vector3.zero, Quaternion.identity);
                     Debug.Log("GameManager spawned successfully");
                 }
@@ -55,6 +71,7 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    //this is called when a player joins the session
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         // Only configure cameras for the local player
@@ -62,21 +79,21 @@ public class GameNetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             var cams = FindObjectsByType<Camera>(FindObjectsSortMode.None);
 
-            // Sort cameras by name to get a predictable order
+            // Sort cameras by name to get a consistent assignment
             cams = cams.OrderBy(c => c.name).ToArray();
 
-            // Determine this player's index
+            // Determine this player's index amongst the active players
             var allPlayers = runner.ActivePlayers.OrderBy(p => p.RawEncoded).ToList();
             int playerIndex = allPlayers.IndexOf(player);
             if (playerIndex < 0) playerIndex = 0;
 
             Debug.Log($"Local Player {player.PlayerId} detected with index {playerIndex}");
 
-            // Disable all cameras locally
+            // Disable all cameras locally/initially
             foreach (var cam in cams)
                 cam.enabled = false;
 
-            // Enable only the assigned camera
+            // Enable only the assigned camera to the specific player
             if (playerIndex < cams.Length)
             {
                 cams[playerIndex].enabled = true;

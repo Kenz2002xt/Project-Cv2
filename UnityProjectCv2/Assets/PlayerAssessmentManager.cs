@@ -4,103 +4,108 @@ using Fusion;
 
 public class PlayerAssessmentManager : NetworkBehaviour
 {
-    // Networked slider values for two players
-    [Networked] public float player1Rational { get; set; }
-    [Networked] public float player1Confident { get; set; }
-    [Networked] public float player1Honest { get; set; }
-    [Networked] public float player1Empathetic { get; set; }
+    [Header("Player 1 Sliders")]
+    public Slider[] player1Sliders = new Slider[4];
 
-    [Networked] public float player2Rational { get; set; }
-    [Networked] public float player2Confident { get; set; }
-    [Networked] public float player2Honest { get; set; }
-    [Networked] public float player2Empathetic { get; set; }
+    [Header("Player 2 Sliders")]
+    public Slider[] player2Sliders = new Slider[4];
 
-    // UI references
-    private GameObject selfAssessmentPanel;
+    [Header("Buttons")]
+    public Button sendButton;
+    public Button closeButton;
 
-    private Slider p1RationalSlider;
-    private Slider p1ConfidentSlider;
-    private Slider p1HonestSlider;
-    private Slider p1EmpatheticSlider;
+    // Networked variables for sliders (these are synchronized across clients)
+    [Networked] private float p1Slider1 { get; set; }
+    [Networked] private float p1Slider2 { get; set; }
+    [Networked] private float p1Slider3 { get; set; }
+    [Networked] private float p1Slider4 { get; set; }
 
-    private Slider p2RationalSlider;
-    private Slider p2ConfidentSlider;
-    private Slider p2HonestSlider;
-    private Slider p2EmpatheticSlider;
+    [Networked] private float p2Slider1 { get; set; }
+    [Networked] private float p2Slider2 { get; set; }
+    [Networked] private float p2Slider3 { get; set; }
+    [Networked] private float p2Slider4 { get; set; }
 
-    private Button closeButton;
-    private Button terminalButton;
-
-    public override void Spawned()
+    private void Awake()
     {
-        // Only the local player sets up UI
-        if (!Object.HasInputAuthority) return;
+        sendButton.onClick.AddListener(OnSendPressed);
+        closeButton.onClick.AddListener(OnClosePressed);
 
-        selfAssessmentPanel = GameObject.Find("selfAssessment/selfAssessmentPanel");
-        if (selfAssessmentPanel == null)
+        // Assign slider change listeners
+        for (int i = 0; i < player1Sliders.Length; i++)
         {
-            Debug.LogError("selfAssessmentPanel not found in scene!");
-            return;
+            int index = i;
+            player1Sliders[i].onValueChanged.AddListener(val => OnSliderChanged(true, index, val));
         }
 
-        SetupSliders();
-        SetupButtons();
-
-        // Show the panel by default
-        selfAssessmentPanel.SetActive(true);
+        for (int i = 0; i < player2Sliders.Length; i++)
+        {
+            int index = i;
+            player2Sliders[i].onValueChanged.AddListener(val => OnSliderChanged(false, index, val));
+        }
     }
 
-    private void SetupSliders()
+    // This is called when a slider is changed. We update the corresponding networked variable.
+    private void OnSliderChanged(bool isPlayer1, int index, float value)
     {
-        // Player 1 sliders
-        p1RationalSlider = selfAssessmentPanel.transform.Find("Player1Rational")?.GetComponent<Slider>();
-        p1ConfidentSlider = selfAssessmentPanel.transform.Find("Player1Confident")?.GetComponent<Slider>();
-        p1HonestSlider = selfAssessmentPanel.transform.Find("Player1Honest")?.GetComponent<Slider>();
-        p1EmpatheticSlider = selfAssessmentPanel.transform.Find("Player1Empathetic")?.GetComponent<Slider>();
+        if (!Object.HasInputAuthority) return; // Only allow the player with authority to move sliders.
 
-        // Player 2 sliders
-        p2RationalSlider = selfAssessmentPanel.transform.Find("Player2Rational")?.GetComponent<Slider>();
-        p2ConfidentSlider = selfAssessmentPanel.transform.Find("Player2Confident")?.GetComponent<Slider>();
-        p2HonestSlider = selfAssessmentPanel.transform.Find("Player2Honest")?.GetComponent<Slider>();
-        p2EmpatheticSlider = selfAssessmentPanel.transform.Find("Player2Empathetic")?.GetComponent<Slider>();
-
-        // Add listeners to update networked variables when sliders move
-        if (p1RationalSlider != null) p1RationalSlider.onValueChanged.AddListener(v => player1Rational = v);
-        if (p1ConfidentSlider != null) p1ConfidentSlider.onValueChanged.AddListener(v => player1Confident = v);
-        if (p1HonestSlider != null) p1HonestSlider.onValueChanged.AddListener(v => player1Honest = v);
-        if (p1EmpatheticSlider != null) p1EmpatheticSlider.onValueChanged.AddListener(v => player1Empathetic = v);
-
-        if (p2RationalSlider != null) p2RationalSlider.onValueChanged.AddListener(v => player2Rational = v);
-        if (p2ConfidentSlider != null) p2ConfidentSlider.onValueChanged.AddListener(v => player2Confident = v);
-        if (p2HonestSlider != null) p2HonestSlider.onValueChanged.AddListener(v => player2Honest = v);
-        if (p2EmpatheticSlider != null) p2EmpatheticSlider.onValueChanged.AddListener(v => player2Empathetic = v);
+        // Update networked value based on which player owns this slider
+        if (isPlayer1)
+        {
+            switch (index)
+            {
+                case 0: p1Slider1 = value; break;
+                case 1: p1Slider2 = value; break;
+                case 2: p1Slider3 = value; break;
+                case 3: p1Slider4 = value; break;
+            }
+        }
+        else
+        {
+            switch (index)
+            {
+                case 0: p2Slider1 = value; break;
+                case 1: p2Slider2 = value; break;
+                case 2: p2Slider3 = value; break;
+                case 3: p2Slider4 = value; break;
+            }
+        }
     }
 
-    private void SetupButtons()
+    public override void FixedUpdateNetwork()
     {
-        // Close button inside the panel
-        closeButton = selfAssessmentPanel.transform.Find("CloseButton")?.GetComponent<Button>();
-        if (closeButton != null)
-            closeButton.onClick.AddListener(() => selfAssessmentPanel.SetActive(false));
+        // Update visual slider positions from networked values.
+        if (!Object.HasInputAuthority)
+        {
+            // Update Player 1 sliders
+            player1Sliders[0].value = p1Slider1;
+            player1Sliders[1].value = p1Slider2;
+            player1Sliders[2].value = p1Slider3;
+            player1Sliders[3].value = p1Slider4;
 
-        // Terminal button somewhere else in scene
-        terminalButton = GameObject.Find("TerminalButton")?.GetComponent<Button>();
-        if (terminalButton != null)
-            terminalButton.onClick.AddListener(() => selfAssessmentPanel.SetActive(true));
+            // Update Player 2 sliders
+            player2Sliders[0].value = p2Slider1;
+            player2Sliders[1].value = p2Slider2;
+            player2Sliders[2].value = p2Slider3;
+            player2Sliders[3].value = p2Slider4;
+        }
     }
 
-    private void Update()
+    private void OnSendPressed()
     {
+        Debug.Log("Send pressed! Values sent across network.");
+        // You can trigger any server-side events or logic here
+    }
 
-        // Keep sliders synced with networked values
-        if (p1RationalSlider != null) p1RationalSlider.value = player1Rational;
-        if (p1ConfidentSlider != null) p1ConfidentSlider.value = player1Confident;
-        if (p1HonestSlider != null) p1HonestSlider.value = player1Honest;
-        if (p1EmpatheticSlider != null) p1EmpatheticSlider.value = player1Empathetic;
+    private void OnClosePressed()
+    {
+        Debug.Log("Close pressed! Hiding assessment panel.");
+        gameObject.SetActive(false); // Close the assessment panel
+    }
 
-        if (p2RationalSlider != null) p2RationalSlider.value = player2Rational;
-        if (p2ConfidentSlider != null) p2ConfidentSlider.value = player2Confident;
-        if (p2HonestSlider != null) p2HonestSlider.value = player2Honest;
-        if (p2EmpatheticSlider != null) p2EmpatheticSlider.value = player2Empathetic;
+    private void OnDestroy()
+    {
+        sendButton.onClick.RemoveListener(OnSendPressed);
+        closeButton.onClick.RemoveListener(OnClosePressed);
     }
 }
